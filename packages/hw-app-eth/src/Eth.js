@@ -209,14 +209,11 @@ export default class Eth {
 
       // First byte > 0xf7 means the length of the list length doesn't fit in a single byte.
       if (rlpVrs[0] > 0xf7) {
-        // Increment rlpOffset to account for that extra byte.
-        rlpOffset++;
-
         // Compute size of the list length.
         let sizeOfListLen = rlpVrs[0] - 0xf7;
 
         // Increase rlpOffset by the size of the list length.
-        rlpOffset += sizeOfListLen - 1;
+        rlpOffset += sizeOfListLen;
       }
 
       const chainIdSrc = rlpTx[6];

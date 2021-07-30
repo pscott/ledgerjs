@@ -189,9 +189,20 @@ export default class Eth {
   }> {
     let paths = splitPath(path);
     let offset = 0;
+    let txType = null;
+
+    // Check if tx is EIP1559 tx
+    // TODO: add support for EIP2930 tx
+    if (rawTxHex[0] == 2) {
+      txType = rawTxHex[0];
+      // Skip the first byte of the rawTxHex
+      rawTxHex = rawTx.slice(1, rawTxHex.length);
+    }
+
     let rawTx = Buffer.from(rawTxHex, "hex");
     let toSend = [];
     let response;
+
     // Check if the TX is encoded following EIP 155
     let rlpTx = ethers.utils.RLP.decode("0x" + rawTxHex).map((hex) =>
       Buffer.from(hex.slice(2), "hex")
@@ -244,10 +255,22 @@ export default class Eth {
 
     rlpTx = ethers.utils.RLP.decode("0x" + rawTxHex);
 
-    const decodedTx = {
-      data: rlpTx[5],
-      to: rlpTx[3],
-    };
+    let decodedTx;
+    // TODO: add eip2930 tx
+    if (txType == 2) {
+      // EIP1559
+      decodedTx = {
+        data: rlpTx[7],
+        to: rlpTx[5],
+      };
+    } else {
+      // Legacy tx
+      decodedTx = {
+        data: rlpTx[5],
+        to: rlpTx[3],
+      };
+    }
+
     const provideForContract = async (address) => {
       const erc20Info = byContractAddress(address);
       if (erc20Info) {

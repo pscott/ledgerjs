@@ -201,27 +201,27 @@ export default class Eth {
       Buffer.from(hex.slice(2), "hex")
     );
 
-    let rlpOffset = 0;
+    let vrsOffset = 0;
     let chainIdPrefix = "";
 
-    if (rlpTx.length > 6 && txType === null) {
+    if (rlpTx.length > 8 && txType === null) {
       const rlpVrs = Buffer.from(
         ethers.utils.RLP.encode(rlpTx.slice(-3)).slice(2),
         "hex"
       );
 
-      rlpOffset = rawTx.length - (rlpVrs.length - 1);
+      vrsOffset = rawTx.length - (rlpVrs.length - 1);
 
       // First byte > 0xf7 means the length of the list length doesn't fit in a single byte.
       if (rlpVrs[0] > 0xf7) {
-        // Increment rlpOffset to account for that extra byte.
-        rlpOffset++;
+        // Increment vrsOffset to account for that extra byte.
+        vrsOffset++;
 
         // Compute size of the list length.
         const sizeOfListLen = rlpVrs[0] - 0xf7;
 
         // Increase rlpOffset by the size of the list length.
-        rlpOffset += sizeOfListLen - 1;
+        vrsOffset += sizeOfListLen - 1;
       }
 
       const chainIdSrc: any = rlpTx[6];
@@ -244,7 +244,7 @@ export default class Eth {
           ? rawTx.length - offset
           : maxChunkSize;
 
-      if (rlpOffset != 0 && offset + chunkSize >= rlpOffset) {
+      if (vrsOffset != 0 && offset + chunkSize >= vrsOffset) {
         // Make sure that the chunk doesn't end right on the EIP 155 marker if set
         chunkSize = rawTx.length - offset;
       }
